@@ -1,0 +1,21 @@
+.img {
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  background: var(--surface-3);
+  color: transparent; /* hide broken-image alt text */
+  flex-shrink: 0;
+}
+
+.fallback {
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--_s, 36px) * 0.42);
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  user-select: none;
+  letter-spacing: 0;
+}

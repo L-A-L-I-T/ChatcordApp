@@ -1,0 +1,113 @@
+/* ── Desktop sidebar ── */
+.aside {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+  transition: transform 220ms ease;
+}
+
+/* ── Sidebar header ── */
+.sideHeader {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sideTitle {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+}
+
+/* ── Conversation list ── */
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 8px;
+}
+
+/* ── Empty state ── */
+.empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ── Mobile header ── */
+.mobileHeader {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.mobileBrand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.logoImg  { color: var(--accent); }
+.logoName { }
+
+.closeBtn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+/* ── Mobile: backdrop + slide ── */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  border: 0;
+  z-index: 39;
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 980px) {
+  .aside {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 88vw);
+    z-index: 40;
+    box-shadow: var(--shadow-lg);
+    border-right: none;
+  }
+
+  .mobileHeader { display: flex; }
+  .sideHeader { display: none; }
+
+  .closed {
+    transform: translateX(-100%);
+  }
+  .open {
+    transform: translateX(0);
+  }
+}
+
+@media (min-width: 981px) {
+  .closed { }
+  .open   { }
+}

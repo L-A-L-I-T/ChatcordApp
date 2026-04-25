@@ -1,0 +1,60 @@
+/* ── Row wrapper ── */
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 4px;
+  max-width: 70%;
+}
+
+.row.own {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+/* ── Small avatar beside bubble — size/shape handled by Avatar component ── */
+.avatar {
+  align-self: flex-end;
+}
+
+/* ── Bubble ── */
+.bubble {
+  max-width: 100%;
+  padding: 9px 13px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Other's message */
+.row:not(.own) .bubble {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+  color: var(--text);
+}
+
+/* Own message */
+.row.own .bubble {
+  background: var(--accent);
+  border: none;
+  border-bottom-right-radius: 4px;
+  color: #fff;
+}
+
+/* ── Meta (name + time) ── */
+.meta {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-bottom: 2px;
+  padding: 0 2px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.row.own .meta {
+  justify-content: flex-end;
+}

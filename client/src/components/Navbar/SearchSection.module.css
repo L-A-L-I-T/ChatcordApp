@@ -1,0 +1,102 @@
+.wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Search input ── */
+.field {
+  position: relative;
+  flex: 1;
+  max-width: 420px;
+}
+
+.icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  display: flex;
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  height: 38px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 12px 0 36px;
+  color: var(--text);
+  font-size: 13px;
+  transition: border-color 150ms;
+}
+
+.input::placeholder { color: var(--text-3); }
+.input:focus { outline: none; border-color: var(--accent); }
+
+/* ── Add button ── */
+.addBtn {
+  height: 38px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: var(--radius);
+  background: var(--accent-light);
+  border: 1px solid var(--accent-glow);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 130ms;
+  white-space: nowrap;
+}
+
+.addBtn:hover:not(:disabled) {
+  background: rgba(91, 109, 248, 0.26);
+}
+
+.addBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--green-light);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.toastClose {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  transition: color 120ms;
+}
+
+.toastClose:hover { color: var(--text); }
+
+@media (max-width: 600px) {
+  .addBtn span { display: none; }
+  .addBtn { padding: 0 10px; }
+}

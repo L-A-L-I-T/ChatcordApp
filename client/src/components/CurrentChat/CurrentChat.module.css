@@ -1,0 +1,142 @@
+/* ── Wrapper fills the main area ── */
+.wrap {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Chat header (friend info) ── */
+.chatHeader {
+  height: 58px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+/* .chatAvatar size/shape handled by Avatar component */
+
+.chatInfo { flex: 1; min-width: 0; }
+
+.chatName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chatStatus {
+  font-size: 12px;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.onlineDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+/* ── Messages scroll area ── */
+.msgs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── Message input bar ── */
+.inputBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.input {
+  flex: 1;
+  height: 42px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 0 14px;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color 150ms;
+}
+
+.input::placeholder { color: var(--text-3); }
+.input:focus { outline: none; border-color: var(--accent); }
+
+.sendBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  transition: opacity 150ms, transform 100ms;
+  flex-shrink: 0;
+}
+
+.sendBtn:hover:not(:disabled) { opacity: 0.88; }
+.sendBtn:active:not(:disabled) { transform: scale(0.95); }
+.sendBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Empty / loading state ── */
+.empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-3);
+  user-select: none;
+}
+
+.emptyIcon {
+  color: var(--text-3);
+  opacity: 0.5;
+}
+
+.emptyTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.emptySub {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+/* ── Spinner ── */
+.spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid var(--surface-3);
+  border-top-color: var(--accent);
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

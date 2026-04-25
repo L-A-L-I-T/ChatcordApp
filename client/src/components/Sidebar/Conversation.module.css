@@ -1,0 +1,62 @@
+.item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 120ms;
+  margin-bottom: 2px;
+  border: 1px solid transparent;
+}
+
+.item:hover {
+  background: var(--surface-2);
+}
+
+.item[data-active="true"] {
+  background: var(--accent-light);
+  border-color: var(--accent-glow);
+}
+
+/* ── Avatar with online dot ── */
+.avatarWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* .avatar size/shape handled by Avatar component */
+
+.dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--green);
+  border: 2px solid var(--surface);
+}
+
+/* ── Text ── */
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sub {
+  font-size: 12px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
