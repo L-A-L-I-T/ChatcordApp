@@ -38,7 +38,11 @@ const Navbar = (props) => {
 
 			{/* Right: profile */}
 			<div className={styles.right}>
-				<ProfileSection user={props.user} ENDPOINT={props.ENDPOINT} />
+				<ProfileSection
+					user={props.user}
+					ENDPOINT={props.ENDPOINT}
+					onLogout={props.onLogout}
+				/>
 			</div>
 		</div>
 	);

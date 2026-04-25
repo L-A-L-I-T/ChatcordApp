@@ -25,12 +25,17 @@ const Chat = () => {
 	const socket = useRef();
 
 	// const ENDPOINT = "https://mern-chatcord.herokuapp.com";
-	const ENDPOINT = "http://localhost:8000";
+	const ENDPOINT = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 	const [isDesktop, setIsDesktop] = useState(
 		typeof window !== "undefined" ? window.innerWidth >= 980 : true
 	);
 	const [leftDrawerOpened, setLeftDrawerOpened] = useState(isDesktop);
+	const handleSocketLogout = () => {
+		if (!socket.current || !user?._id) return;
+		socket.current.emit("logoutUser", user._id);
+		socket.current.disconnect();
+	};
 
 	useEffect(() => {
 		const onResize = () => {
@@ -89,24 +94,39 @@ const Chat = () => {
 
 	useEffect(() => {
 		socket.current = io(`${ENDPOINT}`);
-		socket.current.on("getMessage", (data) => {
+		const onGetMessage = (data) => {
 			setArrivalMessage({
 				sender: data.senderId,
 				text: data.text,
 				createdAt: Date.now(),
 			});
-		});
-	}, []);
+		};
+
+		socket.current.on("getMessage", onGetMessage);
+
+		return () => {
+			socket.current?.off("getMessage", onGetMessage);
+			socket.current?.disconnect();
+		};
+	}, [ENDPOINT]);
 
 	useEffect(() => {
-		socket.current.emit("addUser", user?._id);
-		socket.current.on("getUsers", (users) => {
+		if (!socket.current || !user?._id) return;
+
+		socket.current.emit("addUser", user._id);
+		const onGetUsers = (users) => {
 			let newUsers = [];
 			users.forEach((user) => {
 				newUsers.push(user.userId);
 			});
 			setOnlineUsers(newUsers);
-		});
+		};
+
+		socket.current.on("getUsers", onGetUsers);
+
+		return () => {
+			socket.current?.off("getUsers", onGetUsers);
+		};
 	}, [user]);
 
 	const handleSendMessage = async (e) => {
@@ -170,6 +190,7 @@ const Chat = () => {
 			<header className={styles.header}>
 				<Navbar
 					user={user}
+					onLogout={handleSocketLogout}
 					handleLeftDrawerToggle={handleLeftDrawerToggle}
 					ENDPOINT={ENDPOINT}
 					setRefresh={setRefresh}

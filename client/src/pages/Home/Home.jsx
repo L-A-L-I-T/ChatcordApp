@@ -3,11 +3,12 @@ import { IconMessages } from "@tabler/icons-react";
 import styles from "./Home.module.css";
 
 const Login = () => {
-	const ENDPOINT = "http://localhost:8000";
+	const ENDPOINT = import.meta.env.VITE_API_URL || "http://localhost:8000";
 	// const ENDPOINT = "https://mern-chatcord.herokuapp.com";
 
 	const handleLoginWithGoogle = () => {
-		window.open(`${ENDPOINT}/api/user/google`, "_self");
+		const redirectOrigin = encodeURIComponent(window.location.origin);
+		window.open(`${ENDPOINT}/api/user/google?redirect=${redirectOrigin}`, "_self");
 	};
 
 	return (

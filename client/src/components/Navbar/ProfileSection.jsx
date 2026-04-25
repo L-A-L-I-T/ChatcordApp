@@ -25,7 +25,10 @@ const ProfileSection = (props) => {
 	}, []);
 
 	const logout = () => {
-		window.open(`${props.ENDPOINT}/api/user/logout`, "_self");
+		props.onLogout?.();
+		setTimeout(() => {
+			window.location.href = `${props.ENDPOINT}/api/user/logout`;
+		}, 150);
 	};
 
 	return (

@@ -10,6 +10,8 @@ const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const path = require("path");
 const session = require("express-session");
 const passport = require("passport");
+const { createAdapter } = require("@socket.io/redis-adapter");
+const { createClient } = require("redis");
 
 dotenv.config();
 require("./config/passport");
@@ -90,59 +92,116 @@ app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 8000;
+const REDIS_URL = process.env.REDIS_URL || "redis://127.0.0.1:6379";
+const ONLINE_USERS_KEY = "online_users";
+const userSocketsKey = (userId) => `user:${userId}:sockets`;
 
-const server = app.listen(PORT, () =>
-	console.log(`Server running on PORT ${PORT}...`.yellow.bold)
-);
-
-const io = require("socket.io")(server, {
-	pingTimeout: 60000,
-	cors: {
-		origin: allowedOrigins,
-		credentials: true,
-	},
-});
-
-let users = [];
-
-const addUser = (userId, socketId) => {
-	!users.some((user) => user.userId === userId) &&
-		users.push({ userId, socketId });
+const addOnlineUser = async (redisClient, userId, socketId) => {
+	await redisClient.sAdd(userSocketsKey(userId), socketId);
+	await redisClient.sAdd(ONLINE_USERS_KEY, userId);
 };
 
-const removeUser = (socketId) => {
-	users = users.filter((user) => user.socketId !== socketId);
+const removeOnlineUser = async (redisClient, userId, socketId) => {
+	const socketSetKey = userSocketsKey(userId);
+	await redisClient.sRem(socketSetKey, socketId);
+
+	const activeConnectionCount = await redisClient.sCard(socketSetKey);
+	if (activeConnectionCount === 0) {
+		await redisClient.del(socketSetKey);
+		await redisClient.sRem(ONLINE_USERS_KEY, userId);
+	}
 };
 
-const getUser = (userId) => {
-	return users.find((user) => user.userId == userId);
+const emitOnlineUsers = async (io, redisClient) => {
+	const onlineUserIds = await redisClient.sMembers(ONLINE_USERS_KEY);
+	io.emit(
+		"getUsers",
+		onlineUserIds.map((userId) => ({ userId }))
+	);
 };
 
-io.on("connection", (socket) => {
-	console.log("A user connected..", socket.id);
+const startSocketServer = async () => {
+	const server = app.listen(PORT, () =>
+		console.log(`Server running on PORT ${PORT}...`.yellow.bold)
+	);
 
-	io.emit("welcome", "Hello this is socket server");
-
-	socket.on("addUser", (userId) => {
-		if (userId) {
-			addUser(userId, socket.id);
-			io.emit("getUsers", users);
-		}
-		console.log("users ", users);
+	const io = require("socket.io")(server, {
+		pingTimeout: 60000,
+		cors: {
+			origin: allowedOrigins,
+			credentials: true,
+		},
 	});
 
-	socket.on("sendMessage", ({ senderId, receiverId, text }) => {
-		const user = getUser(receiverId);
-		io.to(user?.socketId).emit("getMessage", {
-			senderId,
-			text,
+	const pubClient = createClient({ url: REDIS_URL });
+	const subClient = pubClient.duplicate();
+
+	pubClient.on("error", (err) => console.error("Redis pub error:", err.message));
+	subClient.on("error", (err) => console.error("Redis sub error:", err.message));
+
+	await Promise.all([pubClient.connect(), subClient.connect()]);
+	io.adapter(createAdapter(pubClient, subClient));
+	console.log("Socket.IO Redis adapter connected".green);
+
+	io.on("connection", (socket) => {
+		console.log(`[${PORT}] socket connected:`, socket.id);
+		io.emit("welcome", "Hello this is socket server");
+
+		socket.on("addUser", async (userId) => {
+			if (!userId) return;
+
+			const normalizedUserId = String(userId);
+			socket.data.userId = normalizedUserId;
+			socket.join(`user:${normalizedUserId}`);
+			console.log(`[${PORT}] addUser`, normalizedUserId, socket.id);
+
+			try {
+				await addOnlineUser(pubClient, normalizedUserId, socket.id);
+				await emitOnlineUsers(io, pubClient);
+			} catch (err) {
+				console.error("Error updating user presence:", err.message);
+			}
 		});
-		console.log("sendMessage ", user);
-	});
 
-	socket.on("disconnect", () => {
-		console.log("A user disconnected");
-		removeUser(socket.id);
-		io.emit("getUsers", users);
+		socket.on("sendMessage", ({ senderId, receiverId, text }) => {
+			if (!receiverId) return;
+			console.log(`[${PORT}] sendMessage ${senderId} -> ${receiverId}`);
+
+			io.to(`user:${receiverId}`).emit("getMessage", {
+				senderId,
+				text,
+			});
+		});
+
+		socket.on("logoutUser", async (userId) => {
+			const normalizedUserId = String(userId || socket.data.userId || "");
+			if (!normalizedUserId) return;
+
+			try {
+				await removeOnlineUser(pubClient, normalizedUserId, socket.id);
+				await emitOnlineUsers(io, pubClient);
+			} catch (err) {
+				console.error("Error removing user on logout:", err.message);
+			}
+		});
+
+		socket.on("disconnect", async () => {
+			console.log(`[${PORT}] socket disconnected:`, socket.id);
+
+			const userId = socket.data.userId;
+			if (!userId) return;
+
+			try {
+				await removeOnlineUser(pubClient, userId, socket.id);
+				await emitOnlineUsers(io, pubClient);
+			} catch (err) {
+				console.error("Error removing user presence:", err.message);
+			}
+		});
 	});
+};
+
+startSocketServer().catch((err) => {
+	console.error("Failed to start socket server:", err);
+	process.exit(1);
 });

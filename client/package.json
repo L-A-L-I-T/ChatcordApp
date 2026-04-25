@@ -30,6 +30,8 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
+    "dev:server1": "VITE_API_URL=http://localhost:8001 vite --port 5173 --strictPort",
+    "dev:server2": "VITE_API_URL=http://localhost:8002 vite --port 3000 --strictPort",
     "build": "vite build",
     "preview": "vite preview"
   },
