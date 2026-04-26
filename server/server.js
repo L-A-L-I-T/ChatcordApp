@@ -33,6 +33,12 @@ const corsOptions = {
 };
 
 const app = express();
+const isProduction = process.env.NODE_ENV === "production";
+
+if (isProduction) {
+	// Required behind Render/other proxies so secure cookies are handled correctly.
+	app.set("trust proxy", 1);
+}
 
 // 1. CORS must be first — before session, passport, body parsing
 app.use(cors(corsOptions));
@@ -44,8 +50,8 @@ app.use(
 		saveUninitialized: false,
 		cookie: {
 			maxAge: 24 * 60 * 60 * 1000,
-			sameSite: "lax",
-			secure: process.env.NODE_ENV === "production",
+			sameSite: isProduction ? "none" : "lax",
+			secure: isProduction,
 		},
 	})
 );
