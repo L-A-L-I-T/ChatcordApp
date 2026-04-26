@@ -48,8 +48,10 @@ const Chat = () => {
 	}, []);
 
 	const getConversations = async () => {
+		if (!user?._id) return;
+
 		try {
-			const res = await axios.get(`${ENDPOINT}/api/conversation/` + user?._id);
+			const res = await axios.get(`${ENDPOINT}/api/conversation/${user._id}`);
 			console.log(res.data);
 			setConversations(res.data);
 		} catch (err) {
@@ -154,15 +156,16 @@ const Chat = () => {
 	};
 
 	useEffect(() => {
+		if (!user?._id) return;
 		getConversations();
-	}, [user, user?._id, refresh]);
+	}, [user?._id, refresh]);
 
 	useEffect(() => {
 		const getMessages = async () => {
+			if (!currentChat?._id) return;
+
 			try {
-				const res = await axios.get(
-					`${ENDPOINT}/api/message/` + currentChat?._id
-				);
+				const res = await axios.get(`${ENDPOINT}/api/message/${currentChat._id}`);
 				setMessages(res.data);
 			} catch (err) {
 				console.log(err);
