@@ -101,11 +101,16 @@ const Chat = () => {
 				createdAt: Date.now(),
 			});
 		};
+		const onFriendAdded = () => {
+			setRefresh((prev) => !prev);
+		};
 
 		socket.current.on("getMessage", onGetMessage);
+		socket.current.on("friendAdded", onFriendAdded);
 
 		return () => {
 			socket.current?.off("getMessage", onGetMessage);
+			socket.current?.off("friendAdded", onFriendAdded);
 			socket.current?.disconnect();
 		};
 	}, [ENDPOINT]);

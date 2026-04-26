@@ -138,6 +138,7 @@ const startSocketServer = async () => {
 			credentials: true,
 		},
 	});
+	app.set("io", io);
 
 	const pubClient = createClient({ url: REDIS_URL });
 	const subClient = pubClient.duplicate();

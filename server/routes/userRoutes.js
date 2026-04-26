@@ -148,6 +148,17 @@ router.put("/:id/addFriend", async (req, res) => {
 
 					try {
 						await newConversation.save();
+						const io = req.app.get("io");
+						if (io) {
+							io.to(`user:${userId}`).emit("friendAdded", {
+								conversationId: newConversation._id,
+								friendId,
+							});
+							io.to(`user:${friendId}`).emit("friendAdded", {
+								conversationId: newConversation._id,
+								friendId: userId,
+							});
+						}
 						console.log("user has been added to friends");
 						res.status(200).json("user has been added to friends");
 					} catch (err) {
