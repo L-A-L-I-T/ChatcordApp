@@ -60,13 +60,18 @@ router.get("/", async (req, res) => {
 
 router.get("/login/success", (req, res) => {
 	if (req.user) {
-		res.status(200).json({
+		return res.status(200).json({
 			success: true,
 			message: "successfull",
 			user: req.user,
 			//   cookies: req.cookies
 		});
 	}
+
+	return res.status(401).json({
+		success: false,
+		message: "Not authenticated",
+	});
 });
 router.get("/logout", (req, res) => {
 	req.logout(() => {

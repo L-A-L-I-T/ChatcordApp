@@ -61,7 +61,6 @@ const Chat = () => {
 
 	useEffect(() => {
 		const getUser = () => {
-			console.log("hello");
 			fetch(`${ENDPOINT}/api/user/login/success`, {
 				method: "GET",
 				credentials: "include",
@@ -86,7 +85,6 @@ const Chat = () => {
 				})
 				.catch((err) => {
 					Navigate("/");
-					console.log("hi");
 					console.error(err);
 				});
 		};
@@ -133,7 +131,6 @@ const Chat = () => {
 
 	const handleSendMessage = async (e) => {
 		// e.preventDefault();
-		console.log(newMessage);
 		const message = {
 			senderId: user?._id,
 			text: newMessage,
@@ -175,7 +172,6 @@ const Chat = () => {
 	}, [currentChat]);
 
 	useEffect(() => {
-		console.log("New Message");
 		arrivalMessage &&
 			currentChat?.members.includes(arrivalMessage.sender) &&
 			setMessages((prev) => [...prev, arrivalMessage]);
