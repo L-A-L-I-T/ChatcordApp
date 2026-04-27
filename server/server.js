@@ -12,6 +12,12 @@ const session = require("express-session");
 const passport = require("passport");
 const { createAdapter } = require("@socket.io/redis-adapter");
 const { createClient } = require("redis");
+const Message = require("./models/messageModel");
+const {
+	initKafka,
+	publishMessageEvent,
+	registerMessageConsumer,
+} = require("./config/kafka");
 
 dotenv.config();
 require("./config/passport");
@@ -150,6 +156,48 @@ const startSocketServer = async () => {
 	io.adapter(createAdapter(pubClient, subClient));
 	console.log("Socket.IO Redis adapter connected".green);
 
+	const persistAndEmitMessage = async ({
+		clientMessageId,
+		senderId,
+		receiverId,
+		text,
+		conversationId,
+	}) => {
+		if (!senderId || !receiverId || !text || !conversationId) return;
+
+		const savedMessage = await new Message({
+			conversationId,
+			senderId,
+			text,
+		}).save();
+
+		const outboundMessage = {
+			_id: savedMessage._id?.toString(),
+			clientMessageId,
+			conversationId,
+			senderId,
+			receiverId,
+			text: savedMessage.text,
+			createdAt: savedMessage.createdAt,
+		};
+
+		io.to(`user:${receiverId}`).emit("getMessage", outboundMessage);
+		io.to(`user:${senderId}`).emit("messageSaved", outboundMessage);
+	};
+
+	try {
+		await initKafka();
+		await registerMessageConsumer(async (payload) => {
+			try {
+				await persistAndEmitMessage(payload);
+			} catch (err) {
+				console.error("Kafka message consumer failed:", err.message);
+			}
+		});
+	} catch (err) {
+		console.error("Kafka pipeline init failed, using DB fallback mode:", err.message);
+	}
+
 	io.on("connection", (socket) => {
 		console.log(`[${PORT}] socket connected:`, socket.id);
 		io.emit("welcome", "Hello this is socket server");
@@ -170,14 +218,34 @@ const startSocketServer = async () => {
 			}
 		});
 
-		socket.on("sendMessage", ({ senderId, receiverId, text }) => {
-			if (!receiverId) return;
+		socket.on("sendMessage", async (payload) => {
+			const { senderId, receiverId, text, conversationId, clientMessageId } =
+				payload || {};
+			if (!receiverId || !senderId || !conversationId || !text) return;
 			console.log(`[${PORT}] sendMessage ${senderId} -> ${receiverId}`);
 
-			io.to(`user:${receiverId}`).emit("getMessage", {
-				senderId,
-				text,
-			});
+			try {
+				const published = await publishMessageEvent({
+					clientMessageId,
+					senderId,
+					receiverId,
+					text,
+					conversationId,
+				});
+
+				if (!published) {
+					// Fallback for local/dev mode when Kafka is not configured.
+					await persistAndEmitMessage({
+						clientMessageId,
+						senderId,
+						receiverId,
+						text,
+						conversationId,
+					});
+				}
+			} catch (err) {
+				console.error("Message pipeline failed:", err.message);
+			}
 		});
 
 		socket.on("logoutUser", async (userId) => {

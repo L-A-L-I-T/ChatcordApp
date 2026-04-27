@@ -96,9 +96,20 @@ const Chat = () => {
 		socket.current = io(`${ENDPOINT}`);
 		const onGetMessage = (data) => {
 			setArrivalMessage({
-				sender: data.senderId,
+				_id: data._id,
+				conversationId: data.conversationId,
+				senderId: data.senderId,
 				text: data.text,
-				createdAt: Date.now(),
+				createdAt: data.createdAt || Date.now(),
+			});
+		};
+		const onMessageSaved = (data) => {
+			setArrivalMessage({
+				_id: data._id,
+				conversationId: data.conversationId,
+				senderId: data.senderId,
+				text: data.text,
+				createdAt: data.createdAt || Date.now(),
 			});
 		};
 		const onFriendAdded = () => {
@@ -106,10 +117,12 @@ const Chat = () => {
 		};
 
 		socket.current.on("getMessage", onGetMessage);
+		socket.current.on("messageSaved", onMessageSaved);
 		socket.current.on("friendAdded", onFriendAdded);
 
 		return () => {
 			socket.current?.off("getMessage", onGetMessage);
+			socket.current?.off("messageSaved", onMessageSaved);
 			socket.current?.off("friendAdded", onFriendAdded);
 			socket.current?.disconnect();
 		};
@@ -134,27 +147,25 @@ const Chat = () => {
 		};
 	}, [user]);
 
-	const handleSendMessage = async (e) => {
-		// e.preventDefault();
-		const message = {
-			senderId: user?._id,
-			text: newMessage,
-			conversationId: currentChat._id,
-		};
+	const handleSendMessage = async () => {
+		if (!socket.current || !user?._id || !friend?._id || !currentChat?._id) return;
+		if (!newMessage?.trim()) return;
+
+		const text = newMessage.trim();
+		const clientMessageId =
+			typeof crypto !== "undefined" && crypto.randomUUID
+				? crypto.randomUUID()
+				: `${Date.now()}-${Math.random()}`;
+
 		setNewMessage("");
 
 		socket.current.emit("sendMessage", {
 			senderId: user._id,
 			receiverId: friend._id,
-			text: newMessage,
+			conversationId: currentChat._id,
+			text,
+			clientMessageId,
 		});
-
-		try {
-			const res = await axios.post(`${ENDPOINT}/api/message`, message);
-			setMessages([...messages, res.data]);
-		} catch (err) {
-			console.log(err);
-		}
 	};
 
 	useEffect(() => {
@@ -178,7 +189,7 @@ const Chat = () => {
 
 	useEffect(() => {
 		arrivalMessage &&
-			currentChat?.members.includes(arrivalMessage.sender) &&
+			currentChat?._id === arrivalMessage.conversationId &&
 			setMessages((prev) => [...prev, arrivalMessage]);
 	}, [arrivalMessage, currentChat]);
 
